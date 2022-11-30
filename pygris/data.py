@@ -1,5 +1,6 @@
 import requests
 import pandas as pd
+import numpy as np
 import appdirs
 import os
 
@@ -57,27 +58,37 @@ def get_census(dataset, variables, year = None, params = {},
 
     if type(variables) is not list:
         variables = [variables]
-
-    joined_vars = ",".join(variables)
-
-    params.update({'get': joined_vars})
-
+    
     if year is None:
         base = f"{endpoint}/{dataset}"
     else:
         base = f"{endpoint}/{year}/{dataset}"
-
-    req = requests.get(url = base, params = params)
-
-    if req.status_code != 200:
-        raise SyntaxError(f"Request failed. The Census Bureau error message is {req.text}")
-
+    # get request must be <50, if more split it and run each chunk
+    # adapted from cenpy
+    #if len(variables)>50:
+    data=[]
+    n_chunks = numpy.ceil(len(variables) / 50)
+    for chunk in numpy.array_split(variables, n_chunks): 
     
-    out = pd.read_json(req.text)
+        joined_vars = ",".join(chunk)
 
-    out.columns = out.iloc[0]
-    out = out[1:]
+        params.update({'get': joined_vars})
 
+        req = requests.get(url = base, params = params)
+
+        if req.status_code != 200:
+            raise SyntaxError(f"Request failed. The Census Bureau error message is {req.text}")
+
+        out = pd.read_json(req.text)
+
+        out.columns = out.iloc[0]
+        out = out[1:]
+        
+        # Add output from each chunk to list
+        data+=out
+
+    out = pandas.concat((data), ignore_index=True, sort=False)
+    
     if return_geoid:
         # find the columns that are not in variables
         my_cols = list(out.columns)
