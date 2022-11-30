@@ -67,7 +67,7 @@ def get_census(dataset, variables, year = None, params = {},
     else:
         base = f"{endpoint}/{year}/{dataset}"
 
-    req = requests.post(url = base, params = params)
+    req = requests.get(url = base, params = params)
 
     if req.status_code != 200:
         raise SyntaxError(f"Request failed. The Census Bureau error message is {req.text}")
