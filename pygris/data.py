@@ -85,7 +85,7 @@ def get_census(dataset, variables, year = None, params = {},
         out = out[1:]
         
         # Add output from each chunk to list
-        data+=out
+        data+=[out]
 
     out = pandas.concat((data), ignore_index=True, sort=False)
     
