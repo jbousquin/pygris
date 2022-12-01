@@ -67,8 +67,8 @@ def get_census(dataset, variables, year = None, params = {},
     # adapted from cenpy
     #if len(variables)>50:
     data=[]
-    n_chunks = numpy.ceil(len(variables) / 50)
-    for chunk in numpy.array_split(variables, n_chunks): 
+    n_chunks = np.ceil(len(variables) / 50)
+    for chunk in np.array_split(variables, n_chunks): 
     
         joined_vars = ",".join(chunk)
 
