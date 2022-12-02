@@ -84,10 +84,9 @@ def get_census(dataset, variables, year = None, params = {},
         out.columns = out.iloc[0]
         out = out[1:]
         
-        # Add output from each chunk to list
-        data+=[out.reset_index(drop=True)]
+        data+=[out]  # Add output from each chunk to list
 
-    out = pd.concat((data), ignore_index=True, sort=False)
+    out = pd.concat((data), ignore_index=True, sort=False, axis=1)
     
     if return_geoid:
         # find the columns that are not in variables
