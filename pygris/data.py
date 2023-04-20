@@ -79,10 +79,8 @@ def get_census(dataset, variables, year = None, params = {},
         if req.status_code != 200:
             raise SyntaxError(f"Request failed. The Census Bureau error message is {req.text}")
 
-        out = pd.read_json(req.text)
-
-        out.columns = out.iloc[0]
-        out = out[1:].copy()
+        json_res = req.json()
+        out = pd.DataFrame().from_records(json_res[1:], columns=json_res[0])
 
         if return_geoid:
             # find the columns that are not in variables
