@@ -79,12 +79,11 @@ def get_census(dataset, variables, year = None, params = {},
         if req.status_code != 200:
             raise SyntaxError(f"Request failed. The Census Bureau error message is {req.text}")
 
-        json_res = req.json()
-        out = pd.DataFrame().from_records(json_res[1:], columns=json_res[0])
+        df = pd.DataFrame(req.json()[1:], columns=req.json()[0])
 
         if return_geoid:
             # find the columns that are not in variables
-            my_cols = list(out.columns)
+            my_cols = list(df.columns)
 
             # if 'state' is not in the list of columns, don't assemble the GEOID; too much
             # ambiguity among possible combinations across the various endpoints
@@ -98,26 +97,26 @@ def get_census(dataset, variables, year = None, params = {},
             geoid_cols = my_cols[state_ix:]
 
             # Assemble the GEOID column, then remove its constituent parts
-            out['GEOID'] = out[geoid_cols].agg("".join, axis = 1)
+            df['GEOID'] = df[geoid_cols].agg("".join, axis = 1)
 
-            out.drop(geoid_cols, axis = 1, inplace = True)
+            df.drop(geoid_cols, axis = 1, inplace = True)
 
         if guess_dtypes:
             num_list = []
             # Iterate through the columns in variables and try to guess if they should be converted
             for v in variables:
-                check = pd.to_numeric(out[v], errors = "coerce")
+                check = pd.to_numeric(df[v], errors = "coerce")
                 # If the columns aren't fully null, convert to numeric, taking care of any oddities
                 if not pd.isnull(check.unique())[0]:
-                    out[v] = check
+                    df[v] = check
                     num_list.append(v)
 
             # If we are guessing numerics, we should convert NAs (negatives below -1 million)
             # to NaN. Users who want to keep the codes should keep as object and handle
             # themselves.
-            out[num_list] = out[num_list].where(out[num_list] > -999999)
+            df[num_list] = df[num_list].where(df[num_list] > -999999)
 
-        data+=[out]  # Add output from each chunk to list
+        data+=[df]  # Add output from each chunk to list
 
     # TODO: Does this need to force on GEOID? (See 2 test cases)
     out = pd.concat((data), sort=False, axis=1)  #concat list of dfs
