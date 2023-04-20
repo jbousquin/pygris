@@ -117,9 +117,14 @@ def get_census(dataset, variables, year = None, params = {},
             df[num_list] = df[num_list].where(df[num_list] > -999999)
 
         data+=[df]  # Add output from each chunk to list
-
-    # TODO: Does this need to force on GEOID? (See 2 test cases)
-    out = pd.concat((data), sort=False, axis=1)  #concat list of dfs
+  
+    if len(data)<2:
+        return data[0]
+    
+    # Merge on shared cols (either GEOID or State/County etc.
+    out = data[0]
+    for df_b in data[1:]:
+        out = out.merge(df_b)
 
     return out
 
