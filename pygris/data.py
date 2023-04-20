@@ -82,7 +82,7 @@ def get_census(dataset, variables, year = None, params = {},
         out = pd.read_json(req.text)
 
         out.columns = out.iloc[0]
-        out = out[1:]
+        out = out[1:].copy()
 
         if return_geoid:
             # find the columns that are not in variables
@@ -98,7 +98,6 @@ def get_census(dataset, variables, year = None, params = {},
             state_ix = my_cols.index("state")
 
             geoid_cols = my_cols[state_ix:]
-            print(geoid_cols)
 
             # Assemble the GEOID column, then remove its constituent parts
             out['GEOID'] = out[geoid_cols].agg("".join, axis = 1)
