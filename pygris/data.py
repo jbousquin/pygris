@@ -98,6 +98,7 @@ def get_census(dataset, variables, year = None, params = {},
             state_ix = my_cols.index("state")
 
             geoid_cols = my_cols[state_ix:]
+            print(geoid_cols)
 
             # Assemble the GEOID column, then remove its constituent parts
             out['GEOID'] = out[geoid_cols].agg("".join, axis = 1)
