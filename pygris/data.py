@@ -102,7 +102,7 @@ def get_census(dataset, variables, year = None, params = {},
             # Assemble the GEOID column, then remove its constituent parts
             out['GEOID'] = out[geoid_cols].agg("".join, axis = 1)
 
-            out = out.drop(geoid_cols, axis = 1)
+            out.drop(geoid_cols, axis = 1, inplace = True)
 
         if guess_dtypes:
             num_list = []
