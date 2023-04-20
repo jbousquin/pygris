@@ -83,45 +83,46 @@ def get_census(dataset, variables, year = None, params = {},
 
         out.columns = out.iloc[0]
         out = out[1:]
-        
+
+        if return_geoid:
+            # find the columns that are not in variables
+            my_cols = list(out.columns)
+
+            # if 'state' is not in the list of columns, don't assemble the GEOID; too much
+            # ambiguity among possible combinations across the various endpoints
+            if "state" not in my_cols:
+                raise ValueError("`return_geoid` is not supported for this geography hierarchy.")
+
+            # Identify the position of the state column in my_cols, and
+            # extract all the columns that follow it
+            state_ix = my_cols.index("state")
+
+            geoid_cols = my_cols[state_ix:]
+
+            # Assemble the GEOID column, then remove its constituent parts
+            out['GEOID'] = out[geoid_cols].agg("".join, axis = 1)
+
+            out = out.drop(geoid_cols, axis = 1)
+
+        if guess_dtypes:
+            num_list = []
+            # Iterate through the columns in variables and try to guess if they should be converted
+            for v in variables:
+                check = pd.to_numeric(out[v], errors = "coerce")
+                # If the columns aren't fully null, convert to numeric, taking care of any oddities
+                if not pd.isnull(check.unique())[0]:
+                    out[v] = check
+                    num_list.append(v)
+
+            # If we are guessing numerics, we should convert NAs (negatives below -1 million)
+            # to NaN. Users who want to keep the codes should keep as object and handle
+            # themselves.
+            out[num_list] = out[num_list].where(out[num_list] > -999999)
+
         data+=[out]  # Add output from each chunk to list
 
-    out = pd.concat((data), sort=False, axis=1)
-    
-    if return_geoid:
-        # find the columns that are not in variables
-        my_cols = list(out.columns)
-
-        # if 'state' is not in the list of columns, don't assemble the GEOID; too much 
-        # ambiguity among possible combinations across the various endpoints
-        if "state" not in my_cols:
-            raise ValueError("`return_geoid` is not supported for this geography hierarchy.")
-
-        # Identify the position of the state column in my_cols, and 
-        # extract all the columns that follow it
-        state_ix = my_cols.index("state")
-
-        geoid_cols = my_cols[state_ix:]
-       
-        # Assemble the GEOID column, then remove its constituent parts
-        out['GEOID'] = out[geoid_cols].agg("".join, axis = 1)
-
-        out = out.drop(geoid_cols, axis = 1)
-    
-    if guess_dtypes:
-        num_list = []
-        # Iterate through the columns in variables and try to guess if they should be converted
-        for v in variables:
-            check = pd.to_numeric(out[v], errors = "coerce")
-            # If the columns aren't fully null, convert to numeric, taking care of any oddities
-            if not pd.isnull(check.unique())[0]:
-                out[v] = check
-                num_list.append(v)
-
-        # If we are guessing numerics, we should convert NAs (negatives below -1 million)
-        # to NaN. Users who want to keep the codes should keep as object and handle
-        # themselves.
-        out[num_list] = out[num_list].where(out[num_list] > -999999)
+    # TODO: Does this need to force on GEOID? (See 2 test cases)
+    out = pd.concat((data), sort=False, axis=1)  #concat list of dfs
 
     return out
 
