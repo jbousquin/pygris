@@ -104,7 +104,7 @@ def get_census(dataset, variables, year = None, params = {},
         if guess_dtypes:
             num_list = []
             # Iterate through the columns in variables and try to guess if they should be converted
-            for v in variables:
+            for v in chunk:
                 check = pd.to_numeric(df[v], errors = "coerce")
                 # If the columns aren't fully null, convert to numeric, taking care of any oddities
                 if not pd.isnull(check.unique())[0]:
